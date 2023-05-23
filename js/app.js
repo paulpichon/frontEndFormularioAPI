@@ -18,13 +18,21 @@ function enviarInformacion( e ) {
     const password = document.querySelector('#password').value;
     const rol = document.querySelector('#rol').value;
 
+    //validar que los inputs no esten vacios
+    if ([nombre, correo, password, rol].includes('') ) {
+        //mostrar alertas
+        verificarErrores('Los campos no deben estar vacios');
+        return;
+    }
+
     //creamos un objeto con la informacion
     const usuarioObj = {
         nombre,
         correo,
         password,
         rol
-    }
+    };
+
     //mandarlo a una funcion para introducirlo a la BD
     crearUsuario( usuarioObj );
 
@@ -33,7 +41,7 @@ function enviarInformacion( e ) {
 function crearUsuario( usuarioObj ) {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-
+    
     const raw = JSON.stringify( usuarioObj );
 
     const requestOptions = {
@@ -45,26 +53,21 @@ function crearUsuario( usuarioObj ) {
 
     fetch("http://localhost:5000/api/usuarios", requestOptions)
     .then(response => response.json())
-    .then(result => {
-        if ( result.errors ) {
-            //mostrar alertas
-            mostrarAlertas( result.errors );
-            return;
-        }
-        console.log(result)
-    })
+    .then(result => console.log(result) )
     .catch(error => console.log('error', error));
 }
 //funcion para mostrar las alertas
-function mostrarAlertas( errores ) {
-    errores.forEach( error => {
-        console.log( error );
-        console.log( error.msg );
+function verificarErrores( mensaje ) {
+    
+    //verificar si hay alertas previas
+    const alertas = document.querySelector('.alerta');
+    //si no hay alertas no mostrarlas
+    if ( !alertas ) {
         const alerta = document.createElement('div');
-        alerta.classList.add('mb-3');
+        alerta.classList.add('mt-5','mb-3', 'alerta');
         alerta.innerHTML = `
             <div class="alert alert-danger" role="alert">
-                ${ error.msg }
+                ${ mensaje }
             </div>
         `;
         formulario.appendChild( alerta );
@@ -72,5 +75,5 @@ function mostrarAlertas( errores ) {
         setTimeout(() => {
             alerta.remove();
         }, 4000);
-    });
+    }
 }
