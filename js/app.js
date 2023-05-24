@@ -1,10 +1,16 @@
 //variables
 const formulario = document.querySelector("#formulario");
+//tabla para mostrar a los usuarios
+const tabla = document.querySelector('#tabla-usuarios');
+//tbody
+const tbody = document.querySelector('#tbody');
 
 //listeners
 document.addEventListener('DOMContentLoaded', () => {
     //formulario
     formulario.addEventListener('submit', enviarInformacion);
+    //mostrar los registros en la tabla
+    obtenerRegistrosApi();
 });
 
 
@@ -118,5 +124,61 @@ function mostrarAlertasApi( mensajesApi ) {
         setTimeout(() => {
             alerta.remove();
         }, 5000);
+    });
+}
+//funcion para mostrar los registros en la tabla
+async function obtenerRegistrosApi() {
+    try {
+        var requestOptions = {
+            method: 'GET',
+            redirect: 'follow'
+          };
+          
+        await fetch("http://localhost:5000/api/usuarios?limite=15", requestOptions)
+            .then(response => response.text())
+            .then(result => mostrarRegistrosHTML( JSON.parse( result ) ))
+            .catch(error => console.log('error', error));
+    } catch (error) {
+        console.log( error );
+    }
+}
+//funcion para mostrar los registros
+function mostrarRegistrosHTML( registros ) {
+    //console.log( registros.usuarios );
+
+    //foreach
+    registros.usuarios.forEach( usuario => {
+        //desestructurar
+        const { _id, correo, estado, nombre, rol } = usuario;
+        
+        if (rol === 'ADMIN_ROLE') {
+            user = 'Rol de Adminsitrador';
+        }else {
+            user = 'Rol de usuario';
+        }
+
+        if ( estado ) {
+            activo = 'ACTIVO';
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${nombre}</td>
+            <td>${correo}</td>
+            <td>${ user }</td>
+            <td>${ activo }</td>
+            <td>
+                <a href="editar-usuario.html?id=${ _id }" id="editar" class="editar" title="Editar Usuario"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
+                <a href="#" data-cliente="${ _id }" class="eliminar" title="Eliminar Usuario"><i class="fa-solid fa-file-circle-xmark"></i></a>
+            </td>
+        `;
+        //botones
+        const buttonEditar = document.createElement('a');
+        buttonEditar.classList.add('editar');
+        buttonEditar.classList.add('editar');
+
+        //append
+        tbody.append( row );
+
     });
 }
