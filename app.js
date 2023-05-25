@@ -1,7 +1,8 @@
+//funcion para mostrar la alerta
+import { mostrarAlertas } from "./helpers/mostrar-alerta.js";
+
 //variables
 const formulario = document.querySelector("#formulario");
-//tabla para mostrar a los usuarios
-const tabla = document.querySelector('#tabla-usuarios');
 //tbody
 const tbody = document.querySelector('#tbody');
 
@@ -11,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     formulario.addEventListener('submit', enviarInformacion);
     //mostrar los registros en la tabla
     obtenerRegistrosApi();
+    //eliminar un usuario
+    tbody.addEventListener('click', idUsuarioEliminar);
 });
 
 
@@ -73,37 +76,7 @@ async function crearUsuario( usuarioObj ) {
         .catch(error => console.log('error', error));
    
 }
-//funcion para mostrar las alertas
-function mostrarAlertas( mensaje, tipoMensaje ) {
-    //verificar si hay alertas previas
-    const alertas = document.querySelector('.alerta');
-    //si no hay alertas no mostrarlas
-    if ( !alertas ) {
-        const alerta = document.createElement('div');
-        alerta.classList.add('mt-5','mb-3', 'alerta');
-        //verificar el tipo de mensaje
-        if( tipoMensaje === 'success' ) {
-            alerta.innerHTML = `
-                <div class="alert alert-success" role="alert">
-                    ${ mensaje }
-                </div>
-            `;
 
-        }else {
-            alerta.innerHTML = `
-            <div class="alert alert-danger" role="alert">
-                ${ mensaje }
-            </div>
-        `;
-        }
-
-        formulario.appendChild( alerta );
-        //quitar las alertas
-        setTimeout(() => {
-            alerta.remove();
-        }, 5000);
-    }
-}
 //funcion para mostrar las alertas
 function mostrarAlertasApi( mensajesApi ) {
     //console.log(mensajesApi.errors);
@@ -144,13 +117,15 @@ async function obtenerRegistrosApi() {
 }
 //funcion para mostrar los registros
 function mostrarRegistrosHTML( registros ) {
-    //console.log( registros.usuarios );
+    //limpiar registros previos
+    limpiarHTML();
 
     //foreach
     registros.usuarios.forEach( usuario => {
         //desestructurar
         const { _id, correo, estado, nombre, rol } = usuario;
-        
+        let user;
+        let activo;
         if (rol === 'ADMIN_ROLE') {
             user = 'Rol de Adminsitrador';
         }else {
@@ -169,7 +144,7 @@ function mostrarRegistrosHTML( registros ) {
             <td>${ activo }</td>
             <td>
                 <a href="editar-usuario.html?id=${ _id }" id="editar" class="editar" title="Editar Usuario"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
-                <a href="#" data-cliente="${ _id }" class="eliminar" title="Eliminar Usuario"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                <a href="#" data-cliente="${ _id }" class="eliminar fa-solid fa-file-circle-xmark" title="Eliminar Usuario"></a>
             </td>
         `;
         //botones
@@ -181,4 +156,37 @@ function mostrarRegistrosHTML( registros ) {
         tbody.append( row );
 
     });
+}
+//funcion para eliminar usuario
+function idUsuarioEliminar( e ) {
+    //verificar que se de CLICK en el boton eliminar
+    if ( e.target.classList.contains('eliminar') ) {
+        const idUsuario = e.target.dataset.cliente;
+        //funcion para borrar el usuario
+        eliminarUsuario( idUsuario );
+        //mostrar mensaje
+        mostrarAlertas('El usuario ha sido eliminado', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 4000);
+    }
+    
+}
+//eliminar usuario
+function eliminarUsuario( idUsuario ) {
+    var requestOptions = {
+        method: 'DELETE',
+        redirect: 'follow'
+      };
+      
+    fetch(`http://localhost:5000/api/usuarios/${ idUsuario  }`, requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
+}
+//limpiar el html
+function limpiarHTML() {
+    while( tbody.firstChild ) {
+        tbody.removeChild(tbody.firstChild);
+    }
 }
